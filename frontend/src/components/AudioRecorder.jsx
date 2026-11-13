@@ -15,7 +15,8 @@ export default function AudioRecorder({ onChange }) {
       rec.current.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
         const type = rec.current.mimeType || "audio/webm";
-        const file = new File([new Blob(chunks.current, { type })], "voice-note.webm", { type });
+        const ext = type.includes("mp4") ? "m4a" : type.includes("ogg") ? "ogg" : "webm";
+        const file = new File([new Blob(chunks.current, { type })], `voice-note.${ext}`, { type });
         setUrl(URL.createObjectURL(file));
         onChange(file);
       };

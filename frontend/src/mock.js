@@ -1,107 +1,83 @@
-// Mock backend so the frontend can be built and demoed without the real API.
-// Shapes follow DESIGN.md section 5. Replace nothing here: just set VITE_USE_MOCK=false.
+// Mock backend in the REAL v1 shapes (docs/INTEGRATION_CONTRACT.md). Lets the UI run with no server.
+import { dateDaysAgo } from "./util";
+
 const wait = (ms = 300) => new Promise((r) => setTimeout(r, ms));
-const svg = (label) =>
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' width='320' height='220'><rect width='100%' height='100%' fill='#dcefd5'/><text x='50%' y='50%' text-anchor='middle' font-size='18' fill='#365'>${label}</text></svg>`
-  );
+const iso = (msAgo = 0) => new Date(Date.now() - msAgo).toISOString();
+const svg = (t) => "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='360' height='240'><rect width='100%' height='100%' fill='#dcefd5'/><text x='50%' y='50%' text-anchor='middle' font-size='18' fill='#365'>${t}</text></svg>`);
+const err = (status, code, message) => Object.assign(new Error(message), { status, code });
 
-const SAFETY = {
-  en: "Wear gloves, mask and full-sleeve clothing while spraying. Do not harvest before the waiting period on the label. [mock text]",
-  kn: "[Kannada safety text comes from the reference JSON]",
-};
+const CIT = { reference_id: "TOM-001", document_title: "[MOCK] Tomato package of practices", publisher: "[mock]", version_or_date: "[mock]", page_or_section: "p.12", passage: "[mock passage] Early blight: concentric brown rings on older leaves, favoured by warm humid weather." };
+const SAFETY = ["[mock] Wear gloves, mask and full-sleeve clothing while spraying.", "[mock] Observe the waiting period on the label before harvest."];
+const farm = (o = {}) => ({ farmer_id: "farmer_demo", crop: "tomato", planting_date: dateDaysAgo(45), growth_stage: "vegetative", location: "Mysuru", recent_weather: "heavy rain last week", farmer_language: "kn", ...o });
 
-let cases = [
+const cases = [
   {
-    case_id: "C-0001",
-    status: "pending_review",
-    created_at: new Date(Date.now() - 3600e3).toISOString(),
-    farm: { crop: "tomato", days_since_planting: 45, growth_stage: "vegetative", district: "Mysuru", language: "kn" },
-    image_urls: [svg("tomato leaf photo (mock)")],
-    audio_url: null,
-    image_findings: [
-      { image_id: "img1", quality: "good", crop_seen: "tomato",
-        symptoms: [{ id: "SYM_LEAF_SPOT_YELLOW_BROWN", confidence: 0.82 }, { id: "SYM_CONCENTRIC_RINGS", confidence: 0.55 }] },
-    ],
-    voice_context: {
-      transcript: "[mock transcript] Planted 45 days ago, heavy rain last week.",
-      language: "kn",
-      extracted: { days_since_planting: 45, weather: "heavy_rain_last_week" },
-      source_quote: "heavy rain last week",
-    },
-    possible_causes: [
-      { cause_id: "CAUSE_EARLY_BLIGHT", score: 0.64, reference_ref: "TNAU tomato p.12 [mock]", evidence: ["SYM_LEAF_SPOT_YELLOW_BROWN", "rain"] },
-      { cause_id: "CAUSE_SEPTORIA_LEAF_SPOT", score: 0.41, reference_ref: "TNAU tomato p.13 [mock]", evidence: ["SYM_LEAF_SPOT_YELLOW_BROWN"] },
-    ],
-    conflicts_or_missing: [],
-    escalation: { required: false, reasons: [] },
-    advisory: {
-      draft_text: { en: "Possible early blight. Remove affected lower leaves and avoid overhead watering. Spray [reference product, from reference only]. [mock draft]", kn: "" },
-      safety_text: SAFETY,
-      citations: ["TNAU tomato p.12 [mock]"],
-    },
+    case_id: "case_0123456789ab", status: "PENDING_REVIEW", review_status: "PENDING", processing_status: "COMPLETED",
+    farm: farm(),
+    image_analysis: { suitability: "SUITABLE", quality_notes: "Sharp, well lit.", model_reported_confidence: 0.78, confidence_is_calibrated: false,
+      symptoms: [{ description: "Yellow-brown spots with concentric rings on lower leaves", plant_part: "leaf", location_on_plant: "lower canopy", source: "image" }],
+      limitations: ["Single photo; stem and fruit not visible"], detected_embedded_text: null },
+    audio_analysis: { transcript: "[mock transcript] Planted 45 days ago, heavy rain last week.", detected_language: "kn", audio_quality_ok: true, crop: "tomato", planting_date: dateDaysAgo(45), crop_age_days: 45, reported_symptoms: ["leaf spots"], recent_weather: "heavy rain last week", practices: [], missing_information: [], ambiguities: [] },
+    missing_information: [], conflicting_evidence: [],
+    possible_causes: [{ cause: "Early blight (possible)", supporting_observations: ["Concentric ring spots", "Heavy rain last week"], citations: [CIT] }],
+    escalation_required: false, escalation_reasons: [],
+    proposed_advisory: { version: 1, language: "en", text: "Possible early blight. Remove affected lower leaves and avoid overhead watering. [mock advisory, product only from reference]", citations: [CIT], safety_instructions: SAFETY, unverifiable_notes: [] },
+    created_at: iso(3600e3), updated_at: iso(3600e3),
   },
   {
-    case_id: "C-0002",
-    status: "needs_expert",
-    created_at: new Date(Date.now() - 600e3).toISOString(),
-    farm: { crop: "tomato", days_since_planting: null, growth_stage: "", district: "Tumakuru", language: "kn" },
-    image_urls: [svg("blurry photo (mock)")],
-    audio_url: null,
-    image_findings: [{ image_id: "img1", quality: "blurry", crop_seen: "tomato", symptoms: [{ id: "SYM_LEAF_SPOT_YELLOW_BROWN", confidence: 0.35 }] }],
-    voice_context: { transcript: "", language: "kn", extracted: {}, source_quote: "" },
-    possible_causes: [],
-    conflicts_or_missing: ["days since planting missing", "no voice note"],
-    escalation: { required: true, reasons: ["BLURRY_IMAGE", "LOW_CONFIDENCE", "EMPTY_TRANSCRIPT"] },
-    advisory: { draft_text: { en: "", kn: "" }, safety_text: SAFETY, citations: [] },
+    case_id: "case_ba5eba11ba11", status: "ESCALATED", review_status: "ESCALATED", processing_status: "COMPLETED",
+    farm: farm({ planting_date: null, growth_stage: null, recent_weather: null, location: "Tumakuru" }),
+    image_analysis: { suitability: "POOR_QUALITY", quality_notes: "Image is blurry.", model_reported_confidence: 0.3, confidence_is_calibrated: false, symptoms: [], limitations: ["Out of focus"], detected_embedded_text: null },
+    audio_analysis: null, missing_information: ["Planting date", "Voice note"], conflicting_evidence: [], possible_causes: [],
+    escalation_required: true,
+    escalation_reasons: [{ code: "IMAGE_UNUSABLE", message: "The photo is too blurry to assess.", needs_from_farmer: "A clear, close photo of the affected leaf in daylight." }],
+    proposed_advisory: null, created_at: iso(600e3), updated_at: iso(600e3),
   },
 ];
 
-const find = (id) => {
-  const c = cases.find((x) => x.case_id === id);
-  if (!c) throw new Error("Case not found");
-  return c;
-};
+const find = (id) => { const c = cases.find((x) => x.case_id === id); if (!c) throw err(404, "CASE_NOT_FOUND", "Case not found."); return c; };
+const mustBePending = (c) => { if (c.status !== "PENDING_REVIEW") throw err(409, "INVALID_TRANSITION", "This case cannot be changed from its current status."); };
 
 export const mockApi = {
-  async listCases() {
-    await wait();
-    return cases.map((c) => ({
-      case_id: c.case_id, status: c.status, created_at: c.created_at,
-      crop: c.farm.crop, district: c.farm.district, escalation_required: c.escalation.required,
-    }));
-  },
-  async getCase(id) { await wait(); return structuredClone(find(id)); },
-  async createCase(fd) {
-    await wait(700);
-    const form = JSON.parse(fd.get("form") || "{}");
-    const id = `C-${String(cases.length + 1).padStart(4, "0")}`;
-    cases.push({
-      ...structuredClone(cases[0]), case_id: id, status: "pending_review",
-      created_at: new Date().toISOString(),
-      farm: { crop: "tomato", days_since_planting: form.days_since_planting, growth_stage: form.growth_stage, district: form.district, language: form.language },
-    });
+  async login(u, p) { await wait(); if (!u || !p) throw err(401, "UNAUTHENTICATED", "Enter a username and password."); return { access_token: "mock-token" }; },
+  async submitCase(payload, image) {
+    await wait(800);
+    const blur = /blur/i.test(image.name);
+    const base = structuredClone(cases[blur ? 1 : 0]);
+    const id = "case_" + Math.random().toString(16).slice(2, 14).padEnd(12, "0");
+    cases.push({ ...base, case_id: id, farm: { ...base.farm, ...payload.farm }, created_at: iso(), updated_at: iso() });
     return { case_id: id };
   },
-  async review(id, body) {
-    await wait(500);
-    const c = find(id);
-    if (body.action === "approve" || body.action === "edit") {
-      if (body.edited_text_en) c.advisory.draft_text.en = body.edited_text_en;
-      c.status = "sent";
-    } else if (body.action === "reject") c.status = "rejected";
-    else if (body.action === "request_photo") c.status = "photo_requested";
-    c.officer_note = body.note || "";
-    return { ok: true, status: c.status };
-  },
-  async getAdvisory(id) {
+  async farmerStatus(id) {
     await wait();
     const c = find(id);
+    const esc = c.escalation_reasons[0];
     return {
-      status: c.status, language: c.farm.language,
-      text: c.status === "sent" ? c.advisory.draft_text : null,
-      safety_text: c.advisory.safety_text, audio_url: null, officer_note: c.officer_note || "",
+      case_id: id, status: c.status, language: c.farm.farmer_language,
+      advisory: c.status === "APPROVED" ? { case_id: id, advisory: c.proposed_advisory, reviewer_id: "officer_demo", approved_at: c.updated_at, review_notes: null } : null,
+      needs_from_farmer: esc?.needs_from_farmer || null,
     };
+  },
+  async farmerAudio() { await wait(); return { status: "NOT_CONFIGURED", audio_ref: null, error: "Text-to-speech is not configured." }; },
+  async listCases() { await wait(); return structuredClone(cases); },
+  async getCase(id) { await wait(); return structuredClone(find(id)); },
+  async media(id, kind) { await wait(150); return kind === "image" ? svg("farmer photo (mock)") : null; },
+  async approve(id, version) {
+    await wait(); const c = find(id); mustBePending(c);
+    if (version !== c.proposed_advisory?.version) throw err(409, "STALE_ADVISORY_VERSION", "stale");
+    c.status = "APPROVED"; c.review_status = "APPROVED"; c.updated_at = iso();
+    return { case_id: id, advisory: c.proposed_advisory, reviewer_id: "officer_demo", approved_at: iso() };
+  },
+  async edit(id, version, text) {
+    await wait(); const c = find(id); mustBePending(c);
+    c.proposed_advisory = { ...c.proposed_advisory, version: version + 1, text };
+    return structuredClone(c.proposed_advisory);
+  },
+  async reject(id) { await wait(); const c = find(id); mustBePending(c); c.status = "REJECTED"; c.review_status = "REJECTED"; return null; },
+  async escalate(id, reason) {
+    await wait(); const c = find(id); mustBePending(c);
+    c.status = "ESCALATED"; c.review_status = "ESCALATED"; c.escalation_required = true;
+    c.escalation_reasons.push({ code: "OFFICER_REQUESTED", message: reason, needs_from_farmer: reason });
+    return null;
   },
 };
