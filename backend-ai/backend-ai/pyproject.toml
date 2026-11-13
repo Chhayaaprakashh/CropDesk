@@ -1,0 +1,9 @@
+[project]
+name = "cropdesk-backend-ai"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: needs real Nexus credentials; never run by default"]
+addopts = "-m 'not integration'"

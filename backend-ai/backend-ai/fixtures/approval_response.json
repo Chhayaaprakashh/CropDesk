@@ -1,0 +1,10 @@
+{
+  "_note": "EXAMPLE SHAPE ONLY - illustrative, not real model output or a real reference.",
+  "case_id": "case_0123456789ab",
+  "advisory": {"version": 1, "text": "<advisory text>", "language": "kn",
+    "citations": [{"reference_id": "<ID from approved collection>", "document_title": "<title>", "passage": "<exact passage>"}],
+    "safety_instructions": [], "unverifiable_notes": []},
+  "reviewer_id": "officer-1",
+  "approved_at": "2026-11-12T10:00:00Z",
+  "review_notes": "Checked against reference."
+}
